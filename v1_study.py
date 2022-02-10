@@ -1,9 +1,10 @@
+from math import e
 import platform
-from xml.etree.ElementTree import QName
-from selenium import webdriver
 import sys
 import datetime
 from datetime import time, datetime, date
+import undetected_chromedriver as uc
+from selenium import webdriver
 
 def get_driver_path():
     # Directory
@@ -53,12 +54,26 @@ def get_period():
             return 5
 
 def fill_out_form(driver_path):
-    option = webdriver.ChromeOptions()
-    option.add_argument("-incognito")
+    print("Opening Browser...")
+    options = uc.ChromeOptions()
+    options.add_argument("-incognito")
+    options.add_argument("--ignore-certificate-error")
+    options.add_argument("--ignore-ssl-errors")
+    # options.add_argument( "--user-data-dir=Default")
+    # options.add_argument('--user-data-dir=./chrome_profile/')
+
     #option.add_argument("--headless")
     #option.add_argument("disable-gpu")
 
-    browser = webdriver.Chrome(executable_path=driver_path, options=option)
+    # browser = uc.Chrome(executable_path=driver_path,options=options)
+    Service = executable_path=driver_path
+    browser = webdriver.Chrome(Service, options=options)
+
+    browser.get("https://accounts.google.com/servicelogin")
+    # WebDriverWait(driver, timeout=3).until(some_condition)
+
+
+
 
 
 def main():
