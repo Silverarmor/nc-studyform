@@ -1,6 +1,6 @@
 import datetime
 import platform
-import sys
+import sys, os
 import time as time_wait
 from datetime import date, datetime, time
 from math import e
@@ -8,7 +8,8 @@ from math import e
 import undetected_chromedriver as uc
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import Select, WebDriverWait
+
 
 import credentials
 
@@ -85,7 +86,7 @@ def select_period(browser, current_period):
     browser.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[1]/div/div/div[2]/div/div[1]/div[1]').click()
     time_wait.sleep(0.5) # Sleep so box can open 
     browser.find_element(By.XPATH, f'//*[@id="mG61Hd"]/div[2]/div/div[2]/div[1]/div/div/div[2]/div/div[2]/div[{current_period + 2}]').click()
-                                   # //*[@id="mG61Hd"]/div[2]/div/div[2]/div[1]/div/div/div[2]/div/div[2]/div[5]
+
 def select_location_page1(browser):
     browser.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[2]/div/div/div[2]/div/div[1]/div[1]').click()
     time_wait.sleep(0.5) # Sleep so box can open 
@@ -100,7 +101,6 @@ def fill_out_form(driver_path, current_period, current_location):
     options.add_argument("--ignore-ssl-errors")
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-plugins-discovery")
-    # options.add_argument( "--user-data-dir=Default")
     # options.add_argument('--user-data-dir=./chrome_profile/')
     #option.add_argument("--headless")
     #option.add_argument("--disable-gpu")
@@ -114,6 +114,7 @@ def fill_out_form(driver_path, current_period, current_location):
     # Login to google
     login(browser, credentials.email, credentials.password)
     
+    print("Authentication successful")
     # Navigate to study form.
     browser.get(credentials.form_link)
 
@@ -126,7 +127,6 @@ def fill_out_form(driver_path, current_period, current_location):
     # Enter form class
     form_class_field = browser.find_element(By.CLASS_NAME, "quantumWizTextinputPaperinputInput")
     form_class_field.click()
-    # form_class_field.clear()
     form_class_field.send_keys(credentials.form_class)
 
     #! !!! NOTE IMPORTANT
@@ -144,16 +144,43 @@ def fill_out_form(driver_path, current_period, current_location):
 
     # Click "next"
     browser.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[3]/div[1]/div[1]/div/span').click()
+    time_wait.sleep(2)
 
-    # Enter location as hall
+    # Enter location as hall (page 2)
     location_field = browser.find_element(By.CLASS_NAME, "quantumWizTextinputPaperinputInput")
     location_field.click()
     location_field.send_keys(current_location)
 
+    # Take evidence screenshot
+    current_date_with_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    
+    system = platform.system()
+    
+    if system == "Linux":
+        screenshot_folder = credentials.linux_screenshot_folder
+    elif system == "Windows":
+        screenshot_folder = credentials.windows_screenshot_folder
+    
+    # screenshot_path = f"{screenshot_folder}/{current_date_with_time}.png"
+    screenshot_path = os.path.join(screenshot_folder, current_date_with_time + ".png")
+
+    # Take screenshot to folder.
+    result = browser.save_screenshot(screenshot_path)
+    print("Screenshot saved to", screenshot_path)
+
+    # result = browser.find_element(By.TAG_NAME, "body").screenshot(screenshot_path)
+
+
+
+    print(result)
+    print("Result above")
+
     # Click "submit" 
     browser.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[3]/div[1]/div[1]/div[2]/span/span').click()
-
-    time_wait.sleep(30)
+    
+    time_wait.sleep(10)
+    browser.close()
+    return screenshot_path
 
 
 def main():
@@ -161,7 +188,7 @@ def main():
     current_period = get_period()
     print(driver_path, current_period)
     current_period = 3
-    current_location = "hall"
+    current_location = "bbhall"
     fill_out_form(driver_path, current_period, current_location)
 
 if __name__ == "__main__":
