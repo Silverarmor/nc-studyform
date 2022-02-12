@@ -18,6 +18,7 @@ import credentials
 
 
 def get_driver_path():
+    """Returns Driver path dependent on OS."""
     # Directory
     system = platform.system()
 
@@ -113,44 +114,12 @@ def login(browser, email, password):
     # Sleep, so google can authenticate before continuing
     time_wait.sleep(8)
 
-
-def fill_out_form(driver_path, current_period, current_location):
-    global headless
+def take_screenshot(browser):
+    """
+    Takes a selenium Screenshot
     
-    print("Opening Browser...")
-    options = uc.ChromeOptions()
-    options.add_argument("--incognito")
-    options.add_argument("--ignore-certificate-error")
-    options.add_argument("--ignore-ssl-errors")
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-plugins-discovery")
-    options.add_argument('--no-sandbox')
-    # options.add_argument('--user-data-dir=./chrome_profile/')
-
-    if headless == True:
-        options.add_argument("--headless")
-        options.add_argument("--disable-gpu")
-
-    Service = executable_path=driver_path
-    # browser = uc.Chrome(Service ,options=options)
-    browser = webdriver.Chrome(Service, options=options)
-    browser.implicitly_wait(10)
-    browser.maximize_window()
-
-    # Login to google
-    login(browser, credentials.email, credentials.password)
-    
-    print("Authentication successful")
-    # Navigate to study form.
-    # browser.get(credentials.form_link)
-    browser.get("https://docs.google.com/forms/d/e/1FAIpQLSdc4dqMz4IBBZ-KQDkHWZCJXm008sUXfV07KAxBl78aVrsdCw/viewform?entry.1325251335=P3&entry.551910328=Other&entry.670234266=13BW&entry.2120017928=hall")
-
-
-    # Click "next"
-    browser.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[3]/div[1]/div[1]/div/span').click()
-    time_wait.sleep(2)
-
-    # Take evidence screenshot
+    Returns a string, path to screenshot.
+    """
     current_date_with_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     
     system = platform.system()
@@ -169,28 +138,84 @@ def fill_out_form(driver_path, current_period, current_location):
 
     # result = browser.find_element(By.TAG_NAME, "body").screenshot(screenshot_path)
 
-
-
     print(result)
     print("Result above")
+    return screenshot_path
+
+def fill_out_form(current_location):
+    global headless
+
+    driver_path = get_driver_path()
+    current_period = get_period()
+
+    print(driver_path, current_period)
+
+    print("Opening Browser...")
+    options = uc.ChromeOptions()
+    options.add_argument("--incognito")
+    options.add_argument("--ignore-certificate-error")
+    options.add_argument("--ignore-ssl-errors")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-plugins-discovery")
+    options.add_argument('--no-sandbox')
+    # options.add_argument('--user-data-dir=./chrome_profile/')
+
+    if headless == True:
+        options.add_argument("--headless")
+        options.add_argument("--disable-gpu")
+
+    Service = executable_path=driver_path
+    # browser = uc.Chrome(Service ,options=options)
+    browser = webdriver.Chrome(Service, options=options)
+    browser.maximize_window()
+
+    # Login to google
+    login(browser, credentials.email, credentials.password)
+    
+    print("Authentication successful")
+
+    # NOTE for testing purposes
+    current_period = 3
+
+    # Create form link
+    link = credentials.form_link
+    link = link.replace("[period]", ("P" + str(current_period)))
+    link = link.replace("[form_class]", str(credentials.form_class))
+    link = link.replace("[location]", str(current_location))
+
+    print("\n\n\n")
+    print(link)
+    print("\n\n\n")
+    # Navigate to study form.
+    browser.get(link)
+
+
+    # Click "next"
+    browser.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[3]/div[1]/div[1]/div/span').click()
+    time_wait.sleep(2)
+
+    # Take evidence screenshot
+    screenshot_path = take_screenshot(browser)
 
     # Click "submit" 
     browser.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[3]/div[1]/div[1]/div[2]/span/span').click()
     
-    time_wait.sleep(10)
+    # Sleep to allow POST to go through
+    time_wait.sleep(5)
+    
+    # End browser instance(s)
     browser.close()
+    browser.quit()
+
     return screenshot_path
 
 
 def main():
     global headless
     headless = True
-    driver_path = get_driver_path()
-    current_period = get_period()
-    print(driver_path, current_period)
-    current_period = 3
-    current_location = "dhall"
-    fill_out_form(driver_path, current_period, current_location)
+    
+    current_location = "uabhall"
+    fill_out_form(current_location)
 
 if __name__ == "__main__":
     main()
