@@ -9,9 +9,12 @@ import undetected_chromedriver as uc
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 
 import credentials
+
+# Credit, my saving grace https://medium.com/@hostapandey/google-login-with-selenium-solved-f58873af5de9
 
 
 def get_driver_path():
@@ -62,29 +65,69 @@ def get_period():
             return 5
 
 def login(browser, email, password):
-    browser.get("https://accounts.google.com/servicelogin")
+    global headless
+    # browser.get("https://accounts.google.com/servicelogin")
+    browser.get('https://accounts.google.com/signin/v2/identifier?flowName=GlifWebSignIn&flowEntry=ServiceLogin')
     # WebDriverWait(driver, timeout=3).until(some_condition)
-    
+
     # Login username
-    username_field = browser.find_element(By.NAME, "identifier")
-    # username_field = browser.find_element
+    # username_field = browser.find_element(By.NAME, "identifier")
+    if headless is False:
+        username_field = WebDriverWait(browser, 10).until(EC.element_to_be_clickable(
+            (By.XPATH, "//input[@id='identifierId']")))
+    else:
+        username_field = WebDriverWait(browser, 10).until(EC.element_to_be_clickable(
+            (By.XPATH, "/html/body/div/div[2]/div[2]/div[1]/form/div/div/div/div/div/input[1]")))
+
     username_field.clear()
     username_field.send_keys(email)
-    username_field.send_keys(u'\ue007')
 
-    time_wait.sleep(5)
+    if headless is False:
+        username_field.send_keys(u'\ue007')
+    else:
+        WebDriverWait(browser, 5).until(EC.element_to_be_clickable(
+            (By.XPATH, "/html/body/div/div[2]/div[2]/div[1]/form/div/div/input")
+            )).click()
 
-    password_field = browser.find_element(By.NAME, "password")
+    time_wait.sleep(2)
+
+    # password_field = browser.find_element(By.NAME, "password")
+    if headless is False:
+        password_field = WebDriverWait(browser, 10).until(EC.element_to_be_clickable(
+            (By.XPATH, "//input[@name='password']")))
+    else:
+        password_field = WebDriverWait(browser, 10).until(
+        EC.element_to_be_clickable((By.XPATH, "/html/body/div[1]/div[2]/div/div[2]/form/span/div/div[2]/input")))
+
     password_field.clear()
     password_field.send_keys(password)
-    password_field.send_keys(u'\ue007')
+    if headless is False:
+        password_field.send_keys(u'\ue007')
+    else:
+        WebDriverWait(browser, 5).until(EC.element_to_be_clickable(
+            (By.XPATH, "/html/body/div[1]/div[2]/div/div[2]/form/span/div/input[2]")
+            )).click()
 
     time_wait.sleep(8)
 
 def select_period(browser, current_period):
-    browser.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[1]/div/div/div[2]/div/div[1]/div[1]').click()
-    browser.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[1]/div/div/div[2]/div/div[1]/div[1]').click()
-    time_wait.sleep(0.5) # Sleep so box can open 
+    # browser.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[1]/div/div/div[2]/div/div[1]/div[1]').click()
+    # browser.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[1]/div/div/div[2]/div/div[1]/div[1]').click()
+    # NOTE if headless, need to click the box TWICE
+    open_box = WebDriverWait(browser, 5).until(EC.element_to_be_clickable(
+        (By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[1]/div/div/div[2]/div/div[1]/div[1]')
+    ))
+    open_box.click()
+    # open_box.click()
+
+    time_wait.sleep(1) # Sleep so box can open 
+    
+    # browser.save_screenshot("aa.png")
+
+    # WebDriverWait(browser, 5).until(EC.element_to_be_clickable(
+    #     (By.XPATH, f'//*[@id="mG61Hd"]/div[2]/div/div[2]/div[1]/div/div/div[2]/div/div[2]/div[{current_period + 2}]')
+    #     )).click()
+
     browser.find_element(By.XPATH, f'//*[@id="mG61Hd"]/div[2]/div/div[2]/div[1]/div/div/div[2]/div/div[2]/div[{current_period + 2}]').click()
 
 def select_location_page1(browser):
@@ -94,6 +137,7 @@ def select_location_page1(browser):
 
 
 def fill_out_form(driver_path, current_period, current_location):
+    global headless
     print("Opening Browser...")
     options = uc.ChromeOptions()
     options.add_argument("--incognito")
@@ -101,9 +145,12 @@ def fill_out_form(driver_path, current_period, current_location):
     options.add_argument("--ignore-ssl-errors")
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-plugins-discovery")
+    options.add_argument('--no-sandbox')
     # options.add_argument('--user-data-dir=./chrome_profile/')
-    #option.add_argument("--headless")
-    #option.add_argument("--disable-gpu")
+
+    if headless == True:
+        options.add_argument("--headless")
+        options.add_argument("--disable-gpu")
 
     Service = executable_path=driver_path
     # browser = uc.Chrome(Service ,options=options)
@@ -184,11 +231,13 @@ def fill_out_form(driver_path, current_period, current_location):
 
 
 def main():
+    global headless
+    headless = True
     driver_path = get_driver_path()
     current_period = get_period()
     print(driver_path, current_period)
     current_period = 3
-    current_location = "bbhall"
+    current_location = "dhall"
     fill_out_form(driver_path, current_period, current_location)
 
 if __name__ == "__main__":
