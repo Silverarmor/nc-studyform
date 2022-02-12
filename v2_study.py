@@ -1,16 +1,14 @@
 import datetime
+import os
 import platform
-import sys, os
 import time as time_wait
 from datetime import date, datetime, time
-from math import e
 
 import undetected_chromedriver as uc
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
+from selenium.webdriver.support.ui import Select, WebDriverWait
 
 import credentials
 
