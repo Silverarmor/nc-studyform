@@ -10,5 +10,9 @@ form_link = ""
 
 
 # This is intended for testing purposes on different systems. Insert a raw FULL PATH to the chromedriver file. On Windows, include '.exe'
-linux_driver_path = r'/home/'
+linux_driver_path = r'/home/...'
 windows_driver_path = r"C:\...\chromedriver.exe"
+
+# Screenshot folder. Insert a raw FULL PATH. DO NOT end with slash.
+linux_screenshot_folder = r'/home/.../screenshots'
+windows_screenshot_folder = r"C:\...\screenshots"
