@@ -8,7 +8,7 @@ import undetected_chromedriver as uc
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait
 
 import credentials
 
@@ -24,8 +24,9 @@ def get_driver_path():
         driver_path = credentials.windows_driver_path
     elif system == "Linux":
         driver_path = credentials.linux_driver_path
-    
+
     return driver_path
+
 
 def time_in_range(start, end, x):
     """Return true if x is in the range [start, end]"""
@@ -33,6 +34,7 @@ def time_in_range(start, end, x):
         return start <= x < end
     else:
         return start <= x or x < end
+
 
 def get_period():
     # Get current time
@@ -62,6 +64,7 @@ def get_period():
             return 4
         elif time_in_range(time(14,10,0), time(15,10,0), time_now):
             return 5
+
 
 def login(browser, email, password):
     global headless
@@ -173,7 +176,7 @@ def fill_out_form(current_location):
     print("Authentication successful")
 
     # NOTE for testing purposes
-    current_period = 3
+    # current_period = 3
 
     # Create form link
     link = credentials.form_link
@@ -184,10 +187,17 @@ def fill_out_form(current_location):
     print("\n\n\n")
     print(link)
     print("\n\n\n")
+
     # Navigate to study form.
     browser.get(link)
 
+    # Click continue on the "continue current draft" panel
 
+    WebDriverWait(browser, 5).until(EC.element_to_be_clickable(
+            (By.XPATH, "/html/body/div[2]/div/div[2]/div[3]/div[2]/a/span")
+            )).click()
+
+    time_wait.sleep(3)
     # Click "next"
     browser.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[3]/div[1]/div[1]/div/span').click()
     time_wait.sleep(2)
@@ -197,10 +207,10 @@ def fill_out_form(current_location):
 
     # Click "submit" 
     browser.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[3]/div[1]/div[1]/div[2]/span/span').click()
-    
+
     # Sleep to allow POST to go through
     time_wait.sleep(5)
-    
+
     # End browser instance(s)
     browser.close()
     browser.quit()
@@ -210,9 +220,9 @@ def fill_out_form(current_location):
 
 def main():
     global headless
-    headless = True
-    
-    current_location = "uabhall"
+    headless = False
+
+    current_location = "thehall"
     fill_out_form(current_location)
 
 if __name__ == "__main__":
